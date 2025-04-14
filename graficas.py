@@ -6,8 +6,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score
 import joblib
+from scipy.stats import mode
 
 # Cargar los datos
 df = pd.read_csv("diabetes.csv")
@@ -36,10 +37,26 @@ print(f"Precisión Regresión Logística: {precision_lr}")
 joblib.dump(lr_model, "modelo_logistic_regression.pkl")
 
 # Modelo 3: K-Means (No Supervisado)
+X_kmeans = X.copy()  # No incluye 'Diabetes_012'
+
 kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
-kmeans.fit(X)
+kmeans.fit(X_kmeans)
 kmeans_labels = kmeans.labels_
 df["Cluster"] = kmeans_labels
+
+# Comparar clústeres con clases reales
+# Mapear los clusters a las clases más frecuentes
+cluster_map = {}
+
+for cluster in np.unique(kmeans_labels):
+    indices = df[df["Cluster"] == cluster].index
+    most_common_class = mode(df.loc[indices, "Diabetes_012"], keepdims=True).mode[0]
+    cluster_map[cluster] = most_common_class
+
+# Convertir etiquetas de cluster a etiquetas de clase estimadas
+mapped_labels = df["Cluster"].map(cluster_map)
+precision_kmeans = accuracy_score(df["Diabetes_012"], mapped_labels)
+print(f"Precisión K-Means (ajustada): {precision_kmeans}")
 
 # Visualización de clusters
 plt.figure(figsize=(8, 6))
@@ -50,14 +67,24 @@ plt.ylabel("Índice de Masa Corporal")
 plt.show()
 
 # Comparación de precisiones
-modelos = ["Random Forest", "Regresión Logística"]
-precisiones = [precision_rf, precision_lr]
+modelos = ["Random Forest", "Regresión Logística", "K-Means"]
+precisiones = [precision_rf, precision_lr, precision_kmeans]
 
 plt.figure(figsize=(8, 6))
-plt.bar(modelos, precisiones, color=['blue', 'green'])
+plt.bar(modelos, precisiones, color=['blue', 'green', 'orange'])
 plt.title("Comparación de Precisión de Modelos")
 plt.ylabel("Precisión")
 plt.ylim(0, 1)
 plt.show()
 
-#Comparar clusterización con el dataset real
+# Matriz de confusión visual
+comparacion = pd.crosstab(df["Diabetes_012"], df["Cluster"])
+print("Comparación entre Clústeres y Clases Reales:")
+print(comparacion)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(comparacion, annot=True, fmt='d', cmap='YlGnBu')
+plt.title("Matriz de Confusión: Clústeres vs Clases Reales")
+plt.xlabel("Cluster")
+plt.ylabel("Clase Real (Diabetes_012)")
+plt.show()

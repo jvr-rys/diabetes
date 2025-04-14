@@ -12,7 +12,6 @@
             margin: 0;
             padding: 0;
         }
-
         .container {
             width: 50%;
             margin: 50px auto;
@@ -21,30 +20,20 @@
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
-
-        h2 {
-            color: #333;
-        }
-
+        h2 { color: #333; }
         form {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-
-        label {
-            font-weight: bold;
-            text-align: left;
-        }
-
+        label { font-weight: bold; text-align: left; }
         input {
             padding: 8px;
-            width: flex;
+            width: 100%;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 16px;
         }
-
         button {
             padding: 10px;
             font-size: 16px;
@@ -53,25 +42,10 @@
             cursor: pointer;
             margin-top: 10px;
         }
-
-        .btn-train {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn-train:hover {
-            background-color: #45a049;
-        }
-
-        .btn-predict {
-            background-color: #008CBA;
-            color: white;
-        }
-
-        .btn-predict:hover {
-            background-color: #007bb5;
-        }
-
+        .btn-train { background-color: #4CAF50; color: white; }
+        .btn-train:hover { background-color: #45a049; }
+        .btn-predict { background-color: #008CBA; color: white; }
+        .btn-predict:hover { background-color: #007bb5; }
         .result {
             font-size: 18px;
             font-weight: bold;
@@ -79,81 +53,94 @@
             padding: 10px;
             border-radius: 5px;
         }
-
-        .risk-low {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .risk-medium {
-            background-color: #FFA500;
-            color: white;
-        }
-
-        .risk-high {
-            background-color: #FF0000;
-            color: white;
-        }
+        .risk-low { background-color: #4CAF50; color: white; }
+        .risk-medium { background-color: #FFA500; color: white; }
+        .risk-high { background-color: #FF0000; color: white; }
     </style>
 </head>
-<script>
-fetch("http://localhost:5000/train", { method: "POST" })
-  .then(response => response.json())
-  .then(data => {
-    if (data.error) {
-      alert("Error: " + data.error);
-      return;
-    }
-
-    // Validar que los valores no sean NaN
-    const precision = isNaN(data.precision_mejor_modelo) ? "Error en cálculo" : (data.precision_mejor_modelo * 100).toFixed(2) + "%";
-
-    alert("Modelo entrenado con precisión: " + precision);
-  })
-  .catch(error => console.error("Error al entrenar el modelo:", error));
-</script>
 <body>
-
     <div class="container">
         <h2>Predicción de Diabetes</h2>
-
         <form id="formulario">
             <label for="HighChol">¿Tienes colesterol alto? (1 = Sí, 0 = No):</label>
             <input type="number" id="HighChol" required>
-
             <label for="BMI">Índice de Masa Corporal (BMI):</label>
             <input type="number" id="BMI" step="0.1" required>
-
             <label for="Smoker">¿Eres fumador? (1 = Sí, 0 = No):</label>
             <input type="number" id="Smoker" required>
-
             <label for="PhysActivity">¿Haces actividad física? (1 = Sí, 0 = No):</label>
             <input type="number" id="PhysActivity" required>
-
             <label for="Fruits">¿Consumes frutas regularmente? (1 = Sí, 0 = No):</label>
             <input type="number" id="Fruits" required>
-
             <label for="Veggies">¿Consumes verduras regularmente? (1 = Sí, 0 = No):</label>
             <input type="number" id="Veggies" required>
-
             <label for="DiffWalk">¿Tienes dificultad para caminar? (1 = Sí, 0 = No):</label>
             <input type="number" id="DiffWalk" required>
-
             <label for="Sex">Sexo (1 = Hombre, 0 = Mujer):</label>
             <input type="number" id="Sex" required>
-
             <label for="Age">Edad:</label>
             <input type="number" id="Age" required>
-
             <button type="button" class="btn-train" onclick="entrenarModelo()">Entrenar Modelo</button>
             <button type="button" class="btn-predict" onclick="predecirDiabetes()">Predecir</button>
         </form>
-
         <h3 id="resultado" class="result"></h3>
-
         <h2>Distribución de Diabetes</h2>
+        <!-- Asegúrate de tener implementada la ruta /graph en la API -->
         <iframe src="http://127.0.0.1:5000/graph" width="100%" height="500px" style="border: none;"></iframe>
     </div>
 
+    <script>
+        function entrenarModelo() {
+            fetch("http://localhost:5000/train", { method: "POST" })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+                // Mostrar las precisiones de todos los modelos en un mensaje
+                let mensaje = "Modelo entrenado.\n" +
+                              "Random Forest: " + (data.precision_random_forest * 100).toFixed(2) + "%\n" +
+                              "Regresión Logística: " + (data.precision_logistic_regression * 100).toFixed(2) + "%\n" +
+                              "K-Means (ajustada): " + (data.precision_kmeans * 100).toFixed(2) + "%\n" +
+                              "Mejor modelo (supervisado): " + data.modelo_seleccionado + " con " +
+                              (data.precision_mejor_modelo * 100).toFixed(2) + "% de precisión.";
+                alert(mensaje);
+            })
+            .catch(error => console.error("Error al entrenar el modelo:", error));
+        }
+
+        function predecirDiabetes() {
+            // Recoger los datos del formulario
+            const data = {
+                HighChol: parseFloat(document.getElementById("HighChol").value),
+                BMI: parseFloat(document.getElementById("BMI").value),
+                Smoker: parseFloat(document.getElementById("Smoker").value),
+                PhysActivity: parseFloat(document.getElementById("PhysActivity").value),
+                Fruits: parseFloat(document.getElementById("Fruits").value),
+                Veggies: parseFloat(document.getElementById("Veggies").value),
+                DiffWalk: parseFloat(document.getElementById("DiffWalk").value),
+                Sex: parseFloat(document.getElementById("Sex").value),
+                Age: parseFloat(document.getElementById("Age").value)
+            };
+
+            fetch("http://localhost:5000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    document.getElementById("resultado").innerText = "Error: " + result.error;
+                } else {
+                    // Puedes ajustar la lógica para interpretar el resultado y añadir clases CSS de riesgo
+                    document.getElementById("resultado").innerText = 
+                        "Predicción: " + result.prediccion + " (Modelo: " + result.modelo_utilizado + ")";
+                }
+            })
+            .catch(error => console.error("Error al predecir:", error));
+        }
+    </script>
 </body>
 </html>
