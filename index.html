@@ -1,32 +1,98 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Predicción de Diabetes</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            text-align: center;
             margin: 0;
             padding: 0;
         }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+        /* Menú hamburguesa */
+        .menu-btn {
+            font-size: 24px;
+            cursor: pointer;
+            user-select: none;
+            display: inline-block;
+            color: white;
+            background: none;
+            border: none;
+        }
+        nav {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            background: #333;
+            width: 200px;
+            height: 100vh;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            padding-top: 20px;
+            box-sizing: border-box;
+            z-index: 999;
+        }
+        nav.active {
+            transform: translateX(0);
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        nav ul li {
+            margin: 10px 0;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 10px 20px;
+            display: block;
+        }
+        nav ul li a:hover {
+            background-color: #555;
+        }
+        /* Contenedor principal */
         .container {
-            width: 50%;
-            margin: 50px auto;
+            max-width: 600px;
             background: white;
+            margin: 70px auto 40px;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 400px;
         }
-        h2 { color: #333; }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
         form {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-        label { font-weight: bold; text-align: left; }
+        label {
+            font-weight: bold;
+            text-align: left;
+        }
         input {
             padding: 8px;
             width: 100%;
@@ -41,106 +107,186 @@
             border-radius: 5px;
             cursor: pointer;
             margin-top: 10px;
+            background-color: #008CBA;
+            color: white;
         }
-        .btn-train { background-color: #4CAF50; color: white; }
-        .btn-train:hover { background-color: #45a049; }
-        .btn-predict { background-color: #008CBA; color: white; }
-        .btn-predict:hover { background-color: #007bb5; }
+        button:hover {
+            background-color: #007bb5;
+        }
         .result {
             font-size: 18px;
             font-weight: bold;
             margin-top: 20px;
             padding: 10px;
             border-radius: 5px;
+            color: white;
+            text-align: center;
         }
-        .risk-low { background-color: #4CAF50; color: white; }
-        .risk-medium { background-color: #FFA500; color: white; }
-        .risk-high { background-color: #FF0000; color: white; }
+        .risk-low {
+            background-color: #4CAF50; /* verde */
+        }
+        .risk-medium {
+            background-color: #FFA500; /* naranja/amarillo */
+        }
+        .risk-high {
+            background-color: #FF0000; /* rojo */
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            margin-top: 20px;
+        }
+        /* Ocultar todas las secciones menos la activa */
+        section {
+            display: none;
+        }
+        section.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Predicción de Diabetes</h2>
-        <form id="formulario">
-            <label for="HighChol">¿Tienes colesterol alto? (1 = Sí, 0 = No):</label>
-            <input type="number" id="HighChol" required>
-            <label for="BMI">Índice de Masa Corporal (BMI):</label>
-            <input type="number" id="BMI" step="0.1" required>
-            <label for="Smoker">¿Eres fumador? (1 = Sí, 0 = No):</label>
-            <input type="number" id="Smoker" required>
-            <label for="PhysActivity">¿Haces actividad física? (1 = Sí, 0 = No):</label>
-            <input type="number" id="PhysActivity" required>
-            <label for="Fruits">¿Consumes frutas regularmente? (1 = Sí, 0 = No):</label>
-            <input type="number" id="Fruits" required>
-            <label for="Veggies">¿Consumes verduras regularmente? (1 = Sí, 0 = No):</label>
-            <input type="number" id="Veggies" required>
-            <label for="DiffWalk">¿Tienes dificultad para caminar? (1 = Sí, 0 = No):</label>
-            <input type="number" id="DiffWalk" required>
-            <label for="Sex">Sexo (1 = Hombre, 0 = Mujer):</label>
-            <input type="number" id="Sex" required>
-            <label for="Age">Edad:</label>
-            <input type="number" id="Age" required>
-            <button type="button" class="btn-train" onclick="entrenarModelo()">Entrenar Modelo</button>
-            <button type="button" class="btn-predict" onclick="predecirDiabetes()">Predecir</button>
-        </form>
-        <h3 id="resultado" class="result"></h3>
-        <h2>Distribución de Diabetes</h2>
-        <!-- Asegúrate de tener implementada la ruta /graph en la API -->
-        <iframe src="http://127.0.0.1:5000/graph" width="100%" height="500px" style="border: none;"></iframe>
-    </div>
+    <header>
+        <h1>Predicción de Diabetes</h1>
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">&#9776;</button>
+    </header>
+    <nav id="menu">
+        <ul>
+            <li><a href="#" data-section="prediccion">Predicción de Diabetes</a></li>
+            <li><a href="#" data-section="explicacion">¿Qué es la Diabetes?</a></li>
+            <li><a href="#" data-section="proyecto">¿Por qué nuestro proyecto?</a></li>
+            <li><a href="#" data-section="grafica">Gráfica de Distribución</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- Página Predicción -->
+        <section id="prediccion" class="active">
+            <h2>Formulario de Predicción</h2>
+            <form id="formulario" onsubmit="event.preventDefault(); predecirDiabetes();">
+                <label for="HighChol">¿Tienes colesterol alto? (1 = Sí, 0 = No):</label>
+                <input type="number" id="HighChol" min="0" max="1" required />
+                <label for="BMI">Índice de Masa Corporal (BMI):</label>
+                <input type="number" id="BMI" step="0.1" required />
+                <label for="Smoker">¿Eres fumador? (1 = Sí, 0 = No):</label>
+                <input type="number" id="Smoker" min="0" max="1" required />
+                <label for="PhysActivity">¿Haces actividad física? (1 = Sí, 0 = No):</label>
+                <input type="number" id="PhysActivity" min="0" max="1" required />
+                <label for="Fruits">¿Consumes frutas regularmente? (1 = Sí, 0 = No):</label>
+                <input type="number" id="Fruits" min="0" max="1" required />
+                <label for="Veggies">¿Consumes verduras regularmente? (1 = Sí, 0 = No):</label>
+                <input type="number" id="Veggies" min="0" max="1" required />
+                <label for="DiffWalk">¿Tienes dificultad para caminar? (1 = Sí, 0 = No):</label>
+                <input type="number" id="DiffWalk" min="0" max="1" required />
+                <label for="Sex">Sexo (1 = Hombre, 0 = Mujer):</label>
+                <input type="number" id="Sex" min="0" max="1" required />
+                <label for="Age">Edad:</label>
+                <input type="number" id="Age" min="0" required />
+                <button type="submit">Predecir</button>
+            </form>
+            <h3 id="resultado" class="result"></h3>
+        </section>
+
+        <!-- Página Explicación -->
+        <section id="explicacion">
+            <h2>¿Qué es la Diabetes?</h2>
+            <p>
+                La diabetes es una enfermedad crónica que se caracteriza por niveles elevados de glucosa en la sangre. Esto ocurre
+                cuando el cuerpo no produce suficiente insulina o no la utiliza adecuadamente. La insulina es una hormona que regula
+                la cantidad de azúcar en la sangre y permite que las células obtengan energía.
+            </p>
+            <p>
+                Existen varios tipos de diabetes, siendo los más comunes la diabetes tipo 1 y tipo 2. La diabetes tipo 2 es la más frecuente
+                y está relacionada con factores como el sobrepeso, la falta de actividad física y la alimentación.
+            </p>
+        </section>
+
+        <!-- Página Proyecto -->
+        <section id="proyecto">
+            <h2>¿Por qué nuestro proyecto?</h2>
+            <p>
+                Nuestro proyecto tiene como objetivo ayudar a las personas a identificar su riesgo de desarrollar diabetes mediante un sistema
+                de predicción sencillo y accesible. Esto permite tomar acciones preventivas tempranas para mejorar la calidad de vida.
+            </p>
+        </section>
+
+        <!-- Página Gráfica -->
+        <section id="grafica">
+            <h2>Gráfica de Distribución de Diabetes</h2>
+            <iframe src="http://localhost:5000/graph" allowfullscreen></iframe>
+        </section>
+    </main>
 
     <script>
-        function entrenarModelo() {
-            fetch("http://localhost:5000/train", { method: "POST" })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert("Error: " + data.error);
-                    return;
-                }
-                // Mostrar las precisiones de todos los modelos en un mensaje
-                let mensaje = "Modelo entrenado.\n" +
-                              "Random Forest: " + (data.precision_random_forest * 100).toFixed(2) + "%\n" +
-                              "Regresión Logística: " + (data.precision_logistic_regression * 100).toFixed(2) + "%\n" +
-                              "K-Means (ajustada): " + (data.precision_kmeans * 100).toFixed(2) + "%\n" +
-                              "Mejor modelo (supervisado): " + data.modelo_seleccionado + " con " +
-                              (data.precision_mejor_modelo * 100).toFixed(2) + "% de precisión.";
-                alert(mensaje);
-            })
-            .catch(error => console.error("Error al entrenar el modelo:", error));
-        }
-
-        function predecirDiabetes() {
-            // Recoger los datos del formulario
+        // Función para llamar a la API y mostrar resultado
+        async function predecirDiabetes() {
             const data = {
-                HighChol: parseFloat(document.getElementById("HighChol").value),
-                BMI: parseFloat(document.getElementById("BMI").value),
-                Smoker: parseFloat(document.getElementById("Smoker").value),
-                PhysActivity: parseFloat(document.getElementById("PhysActivity").value),
-                Fruits: parseFloat(document.getElementById("Fruits").value),
-                Veggies: parseFloat(document.getElementById("Veggies").value),
-                DiffWalk: parseFloat(document.getElementById("DiffWalk").value),
-                Sex: parseFloat(document.getElementById("Sex").value),
-                Age: parseFloat(document.getElementById("Age").value)
+                HighChol: Number(document.getElementById('HighChol').value),
+                BMI: Number(document.getElementById('BMI').value),
+                Smoker: Number(document.getElementById('Smoker').value),
+                PhysActivity: Number(document.getElementById('PhysActivity').value),
+                Fruits: Number(document.getElementById('Fruits').value),
+                Veggies: Number(document.getElementById('Veggies').value),
+                DiffWalk: Number(document.getElementById('DiffWalk').value),
+                Sex: Number(document.getElementById('Sex').value),
+                Age: Number(document.getElementById('Age').value)
             };
 
-            fetch("http://localhost:5000/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.error) {
-                    document.getElementById("resultado").innerText = "Error: " + result.error;
-                } else {
-                    // Puedes ajustar la lógica para interpretar el resultado y añadir clases CSS de riesgo
-                    document.getElementById("resultado").innerText = 
-                        "Predicción: " + result.prediccion + " (Modelo: " + result.modelo_utilizado + ")";
+            try {
+                const response = await fetch('http://localhost:5000/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
                 }
-            })
-            .catch(error => console.error("Error al predecir:", error));
+
+                const result = await response.json();
+
+                const resultado = document.getElementById('resultado');
+                resultado.className = 'result';
+
+                if (result.prediccion === 0) {
+                    resultado.textContent = 'Riesgo bajo de diabetes (0)';
+                    resultado.classList.add('risk-low');
+                } else if (result.prediccion === 1) {
+                    resultado.textContent = 'Riesgo medio de diabetes (1)';
+                    resultado.classList.add('risk-medium');
+                } else if (result.prediccion === 2) {
+                    resultado.textContent = 'Riesgo alto de diabetes (2)';
+                    resultado.classList.add('risk-high');
+                } else {
+                    resultado.textContent = 'Predicción no reconocida';
+                }
+
+            } catch (error) {
+                alert('Error al conectar con la API: ' + error.message);
+                console.error(error);
+            }
         }
+
+        // Código para menú hamburguesa
+        const menuBtn = document.getElementById('menuBtn');
+        const menu = document.getElementById('menu');
+        const sections = document.querySelectorAll('main section');
+        const navLinks = menu.querySelectorAll('a');
+
+        menuBtn.addEventListener('click', () => {
+            menu.classList.toggle('active');
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const target = e.target.getAttribute('data-section');
+                sections.forEach(s => s.classList.remove('active'));
+                document.getElementById(target).classList.add('active');
+                menu.classList.remove('active');
+            });
+        });
     </script>
 </body>
 </html>
